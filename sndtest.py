@@ -36,34 +36,45 @@ def make_sound(array):
     return sndarray.make_sound(array.astype(np.int16))
 
 # generators #
+def _make_generator(f):
+    def generator(*args, **kwargs):
+        return make_sound(f(*args, **kwargs) * _int16max)
+    return generator
+
 def silence(length):
     return make_sound(np.zeros((nsamples(length), 2)))
 
-def white_noise(length):
+def _white_noise(length):
     values = np.random.normal(0, 1/4, (nsamples(length), 2))
     values = np.clip(values, -1.0, +1.0)
-    values *= _int16max
-    return make_sound(values)
+    return values
+white_noise = _make_generator(_white_noise)
 
-def sinwave(length, freq):
+def _sinewave(length, freq):
     values = np.linspace(0, length * freq, num=nsamples(length))
     values = np.sin(2 * np.pi * values)
-    values *= _int16max
-    return make_sound(values)
+    return values
+sinewave = _make_generator(_sinewave)
 
-def squarewave(length, freq):
+def _squarewave(length, freq):
     values = np.linspace(0, length * freq * 2, num=nsamples(length))
     values = np.mod(values, 2)
     values = np.floor(values)
     values = values * 2 - 1
-    values *= _int16max
-    return make_sound(values)
+    return values
+squarewave = _make_generator(_squarewave)
 
-def sawtooth(length, freq):
+def _sawtooth(length, freq):
     values = np.linspace(0, length * freq, num=nsamples(length))
     values = (np.mod(values, 1.0) - .5) * 2
-    values *= _int16max
-    return make_sound(values)
+    return values
+sawtooth = _make_generator(_sawtooth)
+
+def _trianglewave(length, freq):
+    f1 = _squarewave(length, freq)
+    f2 = _sawtooth(length, freq)
+    return (f2 * f1) * 2 - 1
+trianglewave = _make_generator(_trianglewave)
 
 # filters #
 def echo(snd, period=.2, reps=4, decay=.5):
@@ -96,13 +107,14 @@ def cat(*args):
 if __name__ == '__main__':
     pass
 
-    play(sinwave(.05, 880))
+    play(sinewave(.05, 880))
 
     t = .5
     f = 440
 
     play(silence(t))
     play(white_noise(t))
-    play(sinwave(t, f))
+    play(sinewave(t, f))
     play(squarewave(t, f))
     play(sawtooth(t, f))
+    play(trianglewave(t, f))
