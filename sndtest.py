@@ -47,7 +47,8 @@ def white_noise(length):
     return make_sound(values)
 
 def sinwave(length, freq):
-    values = np.sin(np.linspace(0, 2 * np.pi * length * freq, num=nsamples(length)))
+    values = np.linspace(0, length * freq, num=nsamples(length))
+    values = np.sin(2 * np.pi * values)
     values *= _int16max
     return make_sound(values)
 
