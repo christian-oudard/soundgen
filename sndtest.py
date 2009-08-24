@@ -8,7 +8,6 @@ from math import sin
 import numpy as np
 
 mixer.init()
-print 'init', mixer.get_init()
 sndarray.use_arraytype('numpy')
 
 _int16max = (2<<14) - 1
@@ -49,6 +48,14 @@ def white_noise(length):
 def sinwave(length, freq):
     values = np.linspace(0, length * freq, num=nsamples(length))
     values = np.sin(2 * np.pi * values)
+    values *= _int16max
+    return make_sound(values)
+
+def squarewave(length, freq):
+    values = np.linspace(0, length * freq * 2, num=nsamples(length))
+    values = np.mod(values, 2)
+    values = np.floor(values)
+    values = values * 2 - 1
     values *= _int16max
     return make_sound(values)
 
@@ -97,4 +104,5 @@ if __name__ == '__main__':
     play(silence(t))
     play(white_noise(t))
     play(sinwave(t, f))
+    play(squarewave(t, f))
     play(sawtooth(t, f))
