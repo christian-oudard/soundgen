@@ -6,11 +6,12 @@ import random
 from pygame import mixer, time, sndarray
 from math import sin
 import numpy as np
-import scipy
 
 mixer.init()
 print 'init', mixer.get_init()
 sndarray.use_arraytype('numpy')
+
+_int16max = (2<<14) - 1
 
 # utility #
 def play(sound):
@@ -40,13 +41,20 @@ def silence(length):
     return make_sound(np.zeros((nsamples(length), 2)))
 
 def white_noise(length):
-    result = scipy.random.normal(0, 2<<10, (nsamples(length), 2))
-    return make_sound(result)
+    values = np.random.normal(0, 1/4, (nsamples(length), 2))
+    values = np.clip(values, -1.0, +1.0)
+    values *= _int16max
+    return make_sound(values)
 
 def sinwave(length, freq):
     values = np.sin(np.linspace(0, 2 * np.pi * length * freq, num=nsamples(length)))
-    int16max = (2<<14) - 1
-    values *= int16max
+    values *= _int16max
+    return make_sound(values)
+
+def sawtooth(length, freq):
+    values = np.linspace(0, length * freq, num=nsamples(length))
+    values = (np.mod(values, 1.0) - .5) * 2
+    values *= _int16max
     return make_sound(values)
 
 # filters #
@@ -78,18 +86,14 @@ def cat(*args):
     return make_sound(np.concatenate(arrays))
 
 if __name__ == '__main__':
-    play(sinwave(.5, 440))
-    time.wait(200)
+    pass
 
-    sound = echo(mix(sinwave(.1, 440), sinwave(.1, 220), sinwave(.1, 660)))
-    play(sound)
+    play(sinwave(.05, 880))
 
-    sound = cat(white_noise(.1), silence(.4))
-    play(sound)
-    time.wait(200)
-    play(echo(sound))
+    t = .5
+    f = 440
 
-    sound = mixer.Sound('alert.wav')
-    play(sound)
-    time.wait(200)
-    play(echo(sound))
+    play(silence(t))
+    play(white_noise(t))
+    play(sinwave(t, f))
+    play(sawtooth(t, f))
