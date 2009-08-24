@@ -38,16 +38,14 @@ def make_sound(array):
 # generators #
 def _make_generator(f):
     def generator(*args, **kwargs):
-        return make_sound(f(*args, **kwargs) * _int16max)
+        return make_sound(np.clip(f(*args, **kwargs), -1.0, +1.0) * _int16max)
     return generator
 
 def silence(length):
     return make_sound(np.zeros((nsamples(length), 2)))
 
 def _white_noise(length):
-    values = np.random.normal(0, 1/4, (nsamples(length), 2))
-    values = np.clip(values, -1.0, +1.0)
-    return values
+    return np.random.normal(0, 1/4, (nsamples(length), 2))
 white_noise = _make_generator(_white_noise)
 
 def _sinewave(length, freq):
@@ -75,6 +73,15 @@ def _trianglewave(length, freq):
     f2 = _sawtooth(length, freq)
     return (f2 * f1) * 2 - 1
 trianglewave = _make_generator(_trianglewave)
+
+def _pulsewave(length, freq, width=.25):
+    values = _sawtooth(length, freq)
+    values = values - (1 - width * 2)
+    values = np.clip(values, -1.0, +1.0)
+    values = np.floor(values)
+    values = values * 2 + 1
+    return values
+pulsewave = _make_generator(_pulsewave)
 
 # filters #
 def echo(snd, period=.2, reps=4, decay=.5):
@@ -118,3 +125,6 @@ if __name__ == '__main__':
     play(squarewave(t, f))
     play(sawtooth(t, f))
     play(trianglewave(t, f))
+    play(pulsewave(t, f, .10))
+    play(pulsewave(t, f, .25))
+    play(pulsewave(t, f, .40))
