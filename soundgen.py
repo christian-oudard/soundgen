@@ -24,7 +24,7 @@ def play(sound):
 
 
 def write_wav(sound, filename):
-    f = wave.open('output.wav', 'wb')
+    f = wave.open(filename, 'wb')
     f.setframerate(FRAMERATE)
     f.setnchannels(2)
     f.setsampwidth(2)
